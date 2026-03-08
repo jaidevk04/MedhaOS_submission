@@ -1,0 +1,99 @@
+# Secondary region (Hyderabad) overrides
+
+global:
+  environment: production
+  region: ap-south-2
+  domain: medhaos.health
+
+# Reduced replica counts for secondary region (standby mode)
+apiGateway:
+  replicaCount: 2
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 20
+
+supervisorAgent:
+  replicaCount: 1
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 10
+
+triageAgent:
+  replicaCount: 2
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 15
+
+ambientScribeAgent:
+  replicaCount: 1
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 10
+
+drugSafetyAgent:
+  replicaCount: 1
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 8
+
+cdssAgent:
+  replicaCount: 1
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 10
+
+diagnosticVisionAgent:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+
+queueOptimizationAgent:
+  replicaCount: 1
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 8
+
+nurseTaskCoordination:
+  replicaCount: 1
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 8
+
+integrationService:
+  replicaCount: 1
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 8
+
+# Secondary region ingress
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-2:ACCOUNT_ID:certificate/CERT_ID"
+
+# External database configuration (read replica)
+postgresql:
+  external:
+    host: "medhaos-production-db-replica.ap-south-2.rds.amazonaws.com"
+
+# External cache configuration (separate cluster)
+redis:
+  external:
+    host: "medhaos-secondary-redis.ap-south-2.cache.amazonaws.com"
+
+# Service account with IRSA
+serviceAccount:
+  annotations:
+    eks.amazonaws.io/role-arn: "arn:aws:iam::ACCOUNT_ID:role/medhaos-production-eks-nodes-role-secondary"
+
+# Configuration for secondary region
+config:
+  AWS_REGION: ap-south-2
+  AWS_S3_BUCKET: medhaos-production-medical-images-secondary
+  DYNAMODB_AGENT_TASKS_TABLE: medhaos-production-agent-tasks
+  DYNAMODB_SESSION_DATA_TABLE: medhaos-production-session-data
+  DYNAMODB_QUEUE_MANAGEMENT_TABLE: medhaos-production-queue-management
+  LOG_LEVEL: info
+  ENABLE_METRICS: "true"
+  ENABLE_TRACING: "true"
+  TRACING_SAMPLE_RATE: "0.1"
+  REGION_MODE: "secondary"

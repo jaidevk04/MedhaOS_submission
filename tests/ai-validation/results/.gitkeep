@@ -1,0 +1,10 @@
+# AI Validation Results
+
+This directory stores validation test results.
+
+Results are generated in JSON format and include:
+- Accuracy metrics
+- Bias detection results
+- Explainability scores
+- Performance benchmarks
+- Timestamps and model versions

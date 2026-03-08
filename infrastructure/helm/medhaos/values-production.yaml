@@ -1,0 +1,136 @@
+# Production environment overrides for primary region (Mumbai)
+
+global:
+  environment: production
+  region: ap-south-1
+  domain: medhaos.health
+
+# Increase replica counts for production
+apiGateway:
+  replicaCount: 5
+  autoscaling:
+    minReplicas: 5
+    maxReplicas: 30
+
+supervisorAgent:
+  replicaCount: 3
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 15
+
+triageAgent:
+  replicaCount: 5
+  autoscaling:
+    minReplicas: 5
+    maxReplicas: 20
+
+ambientScribeAgent:
+  replicaCount: 3
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 15
+
+drugSafetyAgent:
+  replicaCount: 3
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 12
+
+cdssAgent:
+  replicaCount: 3
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 15
+
+diagnosticVisionAgent:
+  replicaCount: 3
+  autoscaling:
+    enabled: false  # GPU nodes don't autoscale well
+
+queueOptimizationAgent:
+  replicaCount: 3
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 10
+
+nurseTaskCoordination:
+  replicaCount: 3
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 10
+
+integrationService:
+  replicaCount: 3
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 10
+
+# Production ingress configuration
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-1:ACCOUNT_ID:certificate/CERT_ID"
+    alb.ingress.kubernetes.io/wafv2-acl-arn: "arn:aws:wafv2:ap-south-1:ACCOUNT_ID:regional/webacl/medhaos-waf/WAF_ID"
+    alb.ingress.kubernetes.io/shield-advanced-protection: "true"
+
+# External database configuration
+postgresql:
+  external:
+    host: "medhaos-production-db.REGION.rds.amazonaws.com"
+
+# External cache configuration
+redis:
+  external:
+    host: "medhaos-production-redis.REGION.cache.amazonaws.com"
+
+# Service account with IRSA
+serviceAccount:
+  annotations:
+    eks.amazonaws.io/role-arn: "arn:aws:iam::ACCOUNT_ID:role/medhaos-production-eks-nodes-role"
+
+# Production monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+  prometheusRule:
+    enabled: true
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for 5 minutes"
+      
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency detected"
+          description: "95th percentile latency is above 3 seconds"
+      
+      - alert: PodCrashLooping
+        expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod is crash looping"
+          description: "Pod {{ $labels.pod }} is restarting frequently"
+
+# Production configuration
+config:
+  AWS_REGION: ap-south-1
+  AWS_S3_BUCKET: medhaos-production-medical-images-primary
+  DYNAMODB_AGENT_TASKS_TABLE: medhaos-production-agent-tasks
+  DYNAMODB_SESSION_DATA_TABLE: medhaos-production-session-data
+  DYNAMODB_QUEUE_MANAGEMENT_TABLE: medhaos-production-queue-management
+  LOG_LEVEL: info
+  ENABLE_METRICS: "true"
+  ENABLE_TRACING: "true"
+  TRACING_SAMPLE_RATE: "0.1"

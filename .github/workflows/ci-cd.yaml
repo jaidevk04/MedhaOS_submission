@@ -1,0 +1,437 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'release/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+  EKS_CLUSTER_NAME: medhaos-production-eks
+
+jobs:
+  # Lint and Test
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - api-gateway
+          - supervisor-agent
+          - triage-agent
+          - ambient-scribe-agent
+          - drug-safety-agent
+          - cdss-agent
+          - diagnostic-vision-agent
+          - queue-optimization-agent
+          - nurse-task-coordination
+          - integration-service
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+        working-directory: services/${{ matrix.service }}
+      
+      - name: Run linter
+        run: npm run lint
+        working-directory: services/${{ matrix.service }}
+      
+      - name: Run type check
+        run: npm run type-check
+        working-directory: services/${{ matrix.service }}
+      
+      - name: Run tests
+        run: npm run test:ci
+        working-directory: services/${{ matrix.service }}
+        env:
+          NODE_ENV: test
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: services/${{ matrix.service }}/coverage/coverage-final.json
+          flags: ${{ matrix.service }}
+          name: ${{ matrix.service }}
+
+  # Security Scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-projects --severity-threshold=high
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Build and Push Docker Images
+  build-and-push:
+    name: Build and Push
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, security-scan]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    strategy:
+      matrix:
+        service:
+          - api-gateway
+          - supervisor-agent
+          - triage-agent
+          - ambient-scribe-agent
+          - drug-safety-agent
+          - cdss-agent
+          - diagnostic-vision-agent
+          - queue-optimization-agent
+          - nurse-task-coordination
+          - integration-service
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ECR_REGISTRY }}/medhaos/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: services/${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+      
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.ECR_REGISTRY }}/medhaos/${{ matrix.service }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy image scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+
+  # Deploy to Staging (Develop branch)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.medhaos.health
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name medhaos-staging-eks --region ${{ env.AWS_REGION }}
+      
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.13.0'
+      
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install medhaos-staging \
+            ./infrastructure/helm/medhaos \
+            --namespace medhaos-staging \
+            --create-namespace \
+            --values ./infrastructure/helm/medhaos/values.yaml \
+            --values ./infrastructure/helm/medhaos/values-staging.yaml \
+            --set global.imageTag=${{ github.sha }} \
+            --wait \
+            --timeout 10m
+      
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment -n medhaos-staging --timeout=5m
+          kubectl get pods -n medhaos-staging
+
+  # Canary Deployment to Production (Main branch)
+  deploy-production-canary:
+    name: Deploy Production Canary
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production-canary
+      url: https://api.medhaos.health
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+      
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.13.0'
+      
+      - name: Deploy canary (10% traffic)
+        run: |
+          helm upgrade --install medhaos-production-canary \
+            ./infrastructure/helm/medhaos \
+            --namespace medhaos-production \
+            --create-namespace \
+            --values ./infrastructure/helm/medhaos/values.yaml \
+            --values ./infrastructure/helm/medhaos/values-production.yaml \
+            --set global.imageTag=${{ github.sha }} \
+            --set global.canary=true \
+            --set global.canaryWeight=10 \
+            --wait \
+            --timeout 10m
+      
+      - name: Monitor canary metrics
+        run: |
+          echo "Monitoring canary deployment for 30 minutes..."
+          sleep 1800
+      
+      - name: Check canary health
+        id: canary-health
+        run: |
+          ERROR_RATE=$(kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1/namespaces/medhaos-production/pods/*/http_requests_error_rate | jq -r '.items[0].value')
+          LATENCY_P95=$(kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1/namespaces/medhaos-production/pods/*/http_request_duration_p95 | jq -r '.items[0].value')
+          
+          if (( $(echo "$ERROR_RATE > 0.05" | bc -l) )); then
+            echo "Canary error rate too high: $ERROR_RATE"
+            echo "canary_healthy=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          if (( $(echo "$LATENCY_P95 > 3" | bc -l) )); then
+            echo "Canary latency too high: $LATENCY_P95"
+            echo "canary_healthy=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          echo "Canary is healthy"
+          echo "canary_healthy=true" >> $GITHUB_OUTPUT
+      
+      - name: Rollback canary on failure
+        if: failure()
+        run: |
+          helm rollback medhaos-production-canary -n medhaos-production
+          kubectl delete pods -n medhaos-production -l app.kubernetes.io/instance=medhaos-production-canary
+
+  # Full Production Deployment
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-production-canary
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://api.medhaos.health
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Update kubeconfig - Primary Region
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ap-south-1
+      
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.13.0'
+      
+      - name: Deploy to primary region
+        run: |
+          helm upgrade --install medhaos-production \
+            ./infrastructure/helm/medhaos \
+            --namespace medhaos-production \
+            --create-namespace \
+            --values ./infrastructure/helm/medhaos/values.yaml \
+            --values ./infrastructure/helm/medhaos/values-production.yaml \
+            --set global.imageTag=${{ github.sha }} \
+            --wait \
+            --timeout 15m
+      
+      - name: Verify primary deployment
+        run: |
+          kubectl rollout status deployment -n medhaos-production --timeout=10m
+          kubectl get pods -n medhaos-production
+      
+      - name: Update kubeconfig - Secondary Region
+        run: |
+          aws eks update-kubeconfig --name medhaos-production-eks-secondary --region ap-south-2
+      
+      - name: Deploy to secondary region
+        run: |
+          helm upgrade --install medhaos-production \
+            ./infrastructure/helm/medhaos \
+            --namespace medhaos-production \
+            --create-namespace \
+            --values ./infrastructure/helm/medhaos/values.yaml \
+            --values ./infrastructure/helm/medhaos/values-secondary.yaml \
+            --set global.imageTag=${{ github.sha }} \
+            --wait \
+            --timeout 15m
+      
+      - name: Verify secondary deployment
+        run: |
+          kubectl rollout status deployment -n medhaos-production --timeout=10m
+          kubectl get pods -n medhaos-production
+      
+      - name: Run smoke tests
+        run: |
+          npm run test:smoke -- --endpoint=https://api.medhaos.health
+      
+      - name: Notify deployment success
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment successful! :rocket:'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: success()
+      
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          helm rollback medhaos-production -n medhaos-production
+          aws eks update-kubeconfig --name medhaos-production-eks-secondary --region ap-south-2
+          helm rollback medhaos-production -n medhaos-production
+      
+      - name: Notify deployment failure
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment failed! :x: Rolling back...'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: failure()
+
+  # Database Migration
+  database-migration:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+        working-directory: packages/database
+      
+      - name: Run migrations
+        run: npm run migrate:deploy
+        working-directory: packages/database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+      - name: Verify migrations
+        run: npm run migrate:status
+        working-directory: packages/database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

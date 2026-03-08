@@ -1,0 +1,186 @@
+{
+  "dashboard": {
+    "title": "MedhaOS - Resource Utilization",
+    "tags": ["medhaos", "resources", "infrastructure"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage by Service",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total[1m]) * 100",
+            "legendFormat": "{{service}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "percent", "label": "CPU %", "max": 100 },
+          { "format": "short", "show": false }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": { "params": [90], "type": "gt" },
+              "operator": { "type": "and" },
+              "query": { "params": ["A", "5m", "now"] },
+              "reducer": { "params": [], "type": "avg" },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "High CPU Usage",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 2,
+        "title": "Memory Usage by Service",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes / 1024 / 1024",
+            "legendFormat": "{{service}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "decmbytes", "label": "Memory (MB)" },
+          { "format": "short", "show": false }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Heap Memory Usage",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "nodejs_heap_size_used_bytes / 1024 / 1024",
+            "legendFormat": "{{service}} - Used"
+          },
+          {
+            "expr": "nodejs_heap_size_total_bytes / 1024 / 1024",
+            "legendFormat": "{{service}} - Total"
+          }
+        ],
+        "yaxes": [
+          { "format": "decmbytes", "label": "Heap (MB)" },
+          { "format": "short", "show": false }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Garbage Collection Duration",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(nodejs_gc_duration_seconds_sum[1m])",
+            "legendFormat": "{{service}} - {{gctype}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "GC Duration" },
+          { "format": "short", "show": false }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Event Loop Lag",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "nodejs_eventloop_lag_seconds",
+            "legendFormat": "{{service}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Lag" },
+          { "format": "short", "show": false }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": { "params": [0.1], "type": "gt" },
+              "operator": { "type": "and" },
+              "query": { "params": ["A", "5m", "now"] },
+              "reducer": { "params": [], "type": "avg" },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "High Event Loop Lag",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 6,
+        "title": "Network I/O",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(node_network_receive_bytes_total[1m])",
+            "legendFormat": "{{service}} - RX"
+          },
+          {
+            "expr": "rate(node_network_transmit_bytes_total[1m])",
+            "legendFormat": "{{service}} - TX"
+          }
+        ],
+        "yaxes": [
+          { "format": "Bps", "label": "Bytes/sec" },
+          { "format": "short", "show": false }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "File Descriptors",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "process_open_fds",
+            "legendFormat": "{{service}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "label": "Open FDs" },
+          { "format": "short", "show": false }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Database Connections",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "database_connections_active",
+            "legendFormat": "{{service}} - Active"
+          },
+          {
+            "expr": "database_connections_idle",
+            "legendFormat": "{{service}} - Idle"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "label": "Connections" },
+          { "format": "short", "show": false }
+        ]
+      }
+    ]
+  }
+}

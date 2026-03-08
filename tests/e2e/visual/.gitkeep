@@ -1,0 +1,5 @@
+# Visual Regression Test Baselines
+
+This directory stores baseline screenshots for visual regression testing.
+
+Baselines are automatically generated when running tests with `--update-snapshots` flag.

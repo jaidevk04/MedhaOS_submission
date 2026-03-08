@@ -1,0 +1,225 @@
+{
+  "dashboard": {
+    "title": "MedhaOS - Agent Performance",
+    "tags": ["medhaos", "agents", "ai", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Agent Execution Rate",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(agent_execution_total[1m])",
+            "legendFormat": "{{agent_name}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "ops", "label": "Executions/sec" },
+          { "format": "short", "show": false }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Agent Success Rate",
+        "type": "stat",
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "sum(rate(agent_execution_total{success=\"true\"}[5m])) / sum(rate(agent_execution_total[5m])) * 100",
+            "legendFormat": "{{agent_name}}"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "red" },
+                { "value": 90, "color": "yellow" },
+                { "value": 95, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Agent Execution Time (p95)",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(agent_execution_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{agent_name}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Execution Time" },
+          { "format": "short", "show": false }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": { "params": [5], "type": "gt" },
+              "operator": { "type": "and" },
+              "query": { "params": ["A", "5m", "now"] },
+              "reducer": { "params": [], "type": "avg" },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "Slow Agent Execution",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 4,
+        "title": "Agent Confidence Score Distribution",
+        "type": "heatmap",
+        "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(agent_confidence_score_bucket[5m])",
+            "legendFormat": "{{agent_name}}"
+          }
+        ],
+        "dataFormat": "tsbuckets",
+        "yAxis": {
+          "format": "short",
+          "decimals": 2
+        },
+        "cards": {
+          "cardPadding": 2
+        },
+        "color": {
+          "mode": "spectrum",
+          "colorScheme": "interpolateRdYlGn",
+          "exponent": 0.5
+        }
+      },
+      {
+        "id": 5,
+        "title": "Average Confidence Score by Agent",
+        "type": "bargauge",
+        "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "avg(agent_confidence_score) by (agent_name)",
+            "legendFormat": "{{agent_name}}"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "red" },
+                { "value": 0.7, "color": "yellow" },
+                { "value": 0.85, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Low Confidence Executions (< 0.70)",
+        "type": "stat",
+        "gridPos": { "x": 12, "y": 16, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "expr": "sum(agent_confidence_score < 0.70) by (agent_name)",
+            "legendFormat": "{{agent_name}}"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "background",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 10, "color": "yellow" },
+                { "value": 50, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Agent Failures",
+        "type": "stat",
+        "gridPos": { "x": 18, "y": 16, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "expr": "sum(rate(agent_execution_total{success=\"false\"}[5m])) by (agent_name)",
+            "legendFormat": "{{agent_name}}"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 0.1, "color": "yellow" },
+                { "value": 1, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Agent Execution Timeline",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
+        "targets": [
+          {
+            "expr": "agent_execution_duration_seconds",
+            "legendFormat": "{{agent_name}} - {{success}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Duration" },
+          { "format": "short", "show": false }
+        ],
+        "lines": false,
+        "points": true,
+        "pointradius": 2
+      }
+    ]
+  }
+}

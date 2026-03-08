@@ -1,0 +1,57 @@
+[
+  {
+    "symptoms": ["chest pain", "shortness of breath", "sweating"],
+    "vitals": {
+      "temperature": 98.6,
+      "bloodPressure": "145/92",
+      "heartRate": 98,
+      "respiratoryRate": 20,
+      "spo2": 96
+    },
+    "severity": "HIGH"
+  },
+  {
+    "symptoms": ["fever", "cough", "body ache"],
+    "vitals": {
+      "temperature": 101.5,
+      "bloodPressure": "120/80",
+      "heartRate": 85,
+      "respiratoryRate": 18,
+      "spo2": 97
+    },
+    "severity": "MODERATE"
+  },
+  {
+    "symptoms": ["headache", "fatigue"],
+    "vitals": {
+      "temperature": 98.2,
+      "bloodPressure": "118/75",
+      "heartRate": 72,
+      "respiratoryRate": 16,
+      "spo2": 98
+    },
+    "severity": "LOW"
+  },
+  {
+    "symptoms": ["difficulty breathing", "chest tightness", "wheezing"],
+    "vitals": {
+      "temperature": 98.4,
+      "bloodPressure": "125/82",
+      "heartRate": 95,
+      "respiratoryRate": 24,
+      "spo2": 92
+    },
+    "severity": "HIGH"
+  },
+  {
+    "symptoms": ["abdominal pain", "nausea", "vomiting"],
+    "vitals": {
+      "temperature": 99.5,
+      "bloodPressure": "115/78",
+      "heartRate": 88,
+      "respiratoryRate": 18,
+      "spo2": 97
+    },
+    "severity": "MODERATE"
+  }
+]

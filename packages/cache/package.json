@@ -1,0 +1,20 @@
+{
+  "name": "@medhaos/cache",
+  "version": "1.0.0",
+  "description": "Caching layer for MedhaOS with Redis/ElastiCache support",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "ioredis": "^5.3.2",
+    "ioredis-mock": "^8.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,25 @@
+apiVersion: v2
+name: medhaos
+description: MedhaOS Healthcare Intelligence Ecosystem Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - healthcare
+  - ai
+  - medhaos
+home: https://medhaos.health
+sources:
+  - https://github.com/medhaos/platform
+maintainers:
+  - name: MedhaOS Team
+    email: devops@medhaos.health
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: "18.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

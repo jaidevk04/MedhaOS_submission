@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  edge-intelligence:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medhaos-edge-intelligence
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - AWS_REGION=${AWS_REGION:-ap-south-1}
+      - DEVICE_ID=${DEVICE_ID:-edge-device-001}
+      - FACILITY_ID=${FACILITY_ID:-facility-001}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - ./models:/opt/medhaos/models:ro
+      - edge-data:/opt/medhaos/data
+      - edge-logs:/app/logs
+    networks:
+      - medhaos-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  edge-data:
+    driver: local
+  edge-logs:
+    driver: local
+
+networks:
+  medhaos-network:
+    driver: bridge

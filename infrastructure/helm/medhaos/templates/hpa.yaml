@@ -1,0 +1,59 @@
+{{- range $service := list "apiGateway" "supervisorAgent" "triageAgent" "ambientScribeAgent" "drugSafetyAgent" "cdssAgent" "queueOptimizationAgent" "nurseTaskCoordination" "integrationService" }}
+{{- $serviceConfig := index $.Values $service }}
+{{- if and $serviceConfig.enabled $serviceConfig.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $service | kebabcase }}
+  labels:
+    app.kubernetes.io/name: {{ $service | kebabcase }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/component: {{ $service | kebabcase }}
+    app.kubernetes.io/part-of: medhaos
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $service | kebabcase }}
+  minReplicas: {{ $serviceConfig.autoscaling.minReplicas }}
+  maxReplicas: {{ $serviceConfig.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ $serviceConfig.autoscaling.targetCPUUtilizationPercentage }}
+  {{- if $serviceConfig.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ $serviceConfig.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 4
+        periodSeconds: 30
+      selectPolicy: Max
+{{- end }}
+{{- end }}

@@ -1,0 +1,44 @@
+{
+  "name": "@medhaos/public-health-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MedhaOS Public Health Dashboard (Next.js)",
+  "scripts": {
+    "dev": "next dev -p 3005",
+    "build": "next build",
+    "start": "next start -p 3005",
+    "test": "jest",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-map-gl": "^7.1.7",
+    "mapbox-gl": "^3.1.2",
+    "d3": "^7.8.5",
+    "d3-geo": "^3.1.0",
+    "recharts": "^2.10.3",
+    "zustand": "^4.5.0",
+    "socket.io-client": "^4.6.1",
+    "date-fns": "^3.3.1",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1",
+    "lucide-react": "^0.323.0",
+    "class-variance-authority": "^0.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/d3": "^7.4.3",
+    "@types/d3-geo": "^3.1.0",
+    "typescript": "^5.3.3",
+    "tailwindcss": "^3.4.1",
+    "postcss": "^8.4.33",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.1.0"
+  }
+}

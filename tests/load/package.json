@@ -1,0 +1,19 @@
+{
+  "name": "@medhaos/load-tests",
+  "version": "1.0.0",
+  "description": "Load and stress tests for MedhaOS Healthcare Intelligence Ecosystem",
+  "private": true,
+  "scripts": {
+    "test:normal-load": "k6 run k6/normal-load.js",
+    "test:stress": "k6 run k6/stress-test.js",
+    "test:spike": "k6 run k6/spike-test.js",
+    "test:endurance": "k6 run k6/endurance-test.js",
+    "test:jmeter:normal": "jmeter -n -t jmeter/normal-load.jmx -l results/normal-load.jtl -e -o results/normal-load-report",
+    "test:jmeter:stress": "jmeter -n -t jmeter/stress-test.jmx -l results/stress-test.jtl -e -o results/stress-test-report",
+    "clean:results": "rm -rf results/*",
+    "analyze:results": "node scripts/analyze-results.js"
+  },
+  "devDependencies": {
+    "k6": "^0.0.0"
+  }
+}

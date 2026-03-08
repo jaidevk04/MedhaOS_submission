@@ -1,0 +1,37 @@
+[
+  {
+    "id": "patient-001",
+    "name": "Ramesh Kumar",
+    "age": 58,
+    "gender": "MALE",
+    "medicalHistory": ["Previous MI (2020)", "Type 2 Diabetes", "Hypertension"]
+  },
+  {
+    "id": "patient-002",
+    "name": "Priya Sharma",
+    "age": 45,
+    "gender": "FEMALE",
+    "medicalHistory": ["Type 2 Diabetes", "Hypertension"]
+  },
+  {
+    "id": "patient-003",
+    "name": "Amit Patel",
+    "age": 35,
+    "gender": "MALE",
+    "medicalHistory": ["Asthma"]
+  },
+  {
+    "id": "patient-004",
+    "name": "Sunita Reddy",
+    "age": 62,
+    "gender": "FEMALE",
+    "medicalHistory": ["Hypertension", "Chronic Kidney Disease"]
+  },
+  {
+    "id": "patient-005",
+    "name": "Raj Singh",
+    "age": 28,
+    "gender": "MALE",
+    "medicalHistory": []
+  }
+]

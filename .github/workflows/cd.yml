@@ -1,0 +1,197 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: 'ap-south-1'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.medhaos.health
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker images
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/medhaos-api:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/medhaos-api:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/medhaos-api:$IMAGE_TAG $ECR_REGISTRY/medhaos-api:staging
+          docker push $ECR_REGISTRY/medhaos-api:staging
+
+      - name: Deploy to EKS
+        run: |
+          aws eks update-kubeconfig --name medhaos-staging-cluster --region ${{ env.AWS_REGION }}
+          kubectl set image deployment/medhaos-api medhaos-api=${{ steps.login-ecr.outputs.registry }}/medhaos-api:${{ github.sha }} -n staging
+          kubectl rollout status deployment/medhaos-api -n staging
+
+      - name: Run smoke tests
+        run: |
+          npm run test:e2e -- --env=staging
+
+  deploy-production:
+    name: Deploy to Production (Canary)
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'production'
+    needs: [deploy-staging]
+    environment:
+      name: production
+      url: https://medhaos.health
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Promote staging image to production
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker pull $ECR_REGISTRY/medhaos-api:staging
+          docker tag $ECR_REGISTRY/medhaos-api:staging $ECR_REGISTRY/medhaos-api:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/medhaos-api:staging $ECR_REGISTRY/medhaos-api:production
+          docker push $ECR_REGISTRY/medhaos-api:$IMAGE_TAG
+          docker push $ECR_REGISTRY/medhaos-api:production
+
+      - name: Deploy canary (10%)
+        run: |
+          aws eks update-kubeconfig --name medhaos-production-cluster --region ${{ env.AWS_REGION }}
+          kubectl set image deployment/medhaos-api-canary medhaos-api=${{ steps.login-ecr.outputs.registry }}/medhaos-api:${{ github.sha }} -n production
+          kubectl rollout status deployment/medhaos-api-canary -n production
+
+      - name: Monitor canary for 30 minutes
+        run: |
+          echo "Monitoring canary deployment for 30 minutes..."
+          sleep 1800
+
+      - name: Check canary metrics
+        id: canary-check
+        run: |
+          ERROR_RATE=$(aws cloudwatch get-metric-statistics \
+            --namespace MedhaOS/Production \
+            --metric-name ErrorRate \
+            --dimensions Name=Deployment,Value=canary \
+            --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%S) \
+            --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+            --period 1800 \
+            --statistics Average \
+            --query 'Datapoints[0].Average' \
+            --output text)
+          
+          if (( $(echo "$ERROR_RATE > 0.05" | bc -l) )); then
+            echo "Canary error rate too high: $ERROR_RATE"
+            echo "canary_healthy=false" >> $GITHUB_OUTPUT
+          else
+            echo "Canary healthy with error rate: $ERROR_RATE"
+            echo "canary_healthy=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Rollback canary if unhealthy
+        if: steps.canary-check.outputs.canary_healthy == 'false'
+        run: |
+          kubectl rollout undo deployment/medhaos-api-canary -n production
+          exit 1
+
+      - name: Promote to full production
+        if: steps.canary-check.outputs.canary_healthy == 'true'
+        run: |
+          kubectl set image deployment/medhaos-api medhaos-api=${{ steps.login-ecr.outputs.registry }}/medhaos-api:${{ github.sha }} -n production
+          kubectl rollout status deployment/medhaos-api -n production
+
+      - name: Notify deployment success
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "✅ MedhaOS Production Deployment Successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Status:* Success\n*Environment:* Production\n*Commit:* ${{ github.sha }}\n*Deployed by:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify deployment failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "❌ MedhaOS Production Deployment Failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Status:* Failed\n*Environment:* Production\n*Commit:* ${{ github.sha }}\n*Deployed by:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }

@@ -1,0 +1,26 @@
+{{- range $service := list "apiGateway" "supervisorAgent" "triageAgent" "ambientScribeAgent" "drugSafetyAgent" "cdssAgent" "diagnosticVisionAgent" "queueOptimizationAgent" "nurseTaskCoordination" "integrationService" }}
+{{- $serviceConfig := index $.Values $service }}
+{{- if $serviceConfig.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service | kebabcase }}
+  labels:
+    app.kubernetes.io/name: {{ $service | kebabcase }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/component: {{ $service | kebabcase }}
+    app.kubernetes.io/part-of: medhaos
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+spec:
+  type: {{ $serviceConfig.service.type }}
+  ports:
+  - port: {{ $serviceConfig.service.port }}
+    targetPort: {{ $serviceConfig.service.targetPort | default $serviceConfig.service.port }}
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: {{ $service | kebabcase }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+{{- end }}
+{{- end }}

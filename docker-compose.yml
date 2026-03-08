@@ -1,0 +1,166 @@
+version: '3.9'
+
+services:
+  # PostgreSQL - Primary database for patient records
+  postgres:
+    image: postgres:16-alpine
+    container_name: medhaos-postgres
+    environment:
+      POSTGRES_USER: medhaos
+      POSTGRES_PASSWORD: medhaos_dev_password
+      POSTGRES_DB: medhaos_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U medhaos']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - medhaos-network
+
+  # Redis - Caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: medhaos-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - medhaos-network
+
+  # LocalStack - AWS services emulation for local development
+  localstack:
+    image: localstack/localstack:latest
+    container_name: medhaos-localstack
+    environment:
+      SERVICES: s3,dynamodb,sqs,sns,lambda,eventbridge,secretsmanager
+      DEBUG: 1
+      DATA_DIR: /tmp/localstack/data
+      DOCKER_HOST: unix:///var/run/docker.sock
+    ports:
+      - '4566:4566'
+      - '4571:4571'
+    volumes:
+      - localstack_data:/tmp/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - medhaos-network
+
+  # OpenSearch - Search and analytics (Elasticsearch alternative)
+  opensearch:
+    image: opensearchproject/opensearch:2.11.1
+    container_name: medhaos-opensearch
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ports:
+      - '9200:9200'
+      - '9600:9600'
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:9200/_cluster/health || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - medhaos-network
+
+  # Minio - S3-compatible object storage for local development
+  minio:
+    image: minio/minio:latest
+    container_name: medhaos-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ':9001'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - medhaos-network
+
+  # Prometheus - Metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: medhaos-prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./infrastructure/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - medhaos-network
+
+  # Grafana - Metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: medhaos-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-clock-panel
+    ports:
+      - '3001:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./infrastructure/docker/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - medhaos-network
+
+  # Jaeger - Distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: medhaos-jaeger
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: ':9411'
+    ports:
+      - '5775:5775/udp'
+      - '6831:6831/udp'
+      - '6832:6832/udp'
+      - '5778:5778'
+      - '16686:16686'
+      - '14268:14268'
+      - '14250:14250'
+      - '9411:9411'
+    networks:
+      - medhaos-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  localstack_data:
+  opensearch_data:
+  minio_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  medhaos-network:
+    driver: bridge

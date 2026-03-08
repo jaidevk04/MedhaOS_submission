@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedhaOS Healthcare Platform - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-xl">M</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">MedhaOS</h1>
+                        <p class="text-sm text-gray-500">Healthcare Intelligence Platform</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">Admin Dashboard</span>
+                    <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Stat Card 1 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Patients</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">1,247</p>
+                        <p class="text-sm text-green-600 mt-2">↑ 12% from last week</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat Card 2 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Consultations Today</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">342</p>
+                        <p class="text-sm text-green-600 mt-2">↑ 8% from yesterday</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat Card 3 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">AI Predictions</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">89</p>
+                        <p class="text-sm text-blue-600 mt-2">96% accuracy rate</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat Card 4 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">System Health</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">98%</p>
+                        <p class="text-sm text-green-600 mt-2">All systems operational</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Recent Activity -->
+            <div class="lg:col-span-2 bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Recent Activity</h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">New patient registered</p>
+                                <p class="text-sm text-gray-500">Rajesh Kumar - ID: PT-2024-1247</p>
+                                <p class="text-xs text-gray-400 mt-1">2 minutes ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">AI Triage completed</p>
+                                <p class="text-sm text-gray-500">Priority: High - Chest pain symptoms detected</p>
+                                <p class="text-xs text-gray-400 mt-1">5 minutes ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">Ambient scribe session</p>
+                                <p class="text-sm text-gray-500">Dr. Sharma - 15 min consultation documented</p>
+                                <p class="text-xs text-gray-400 mt-1">12 minutes ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">Drug interaction alert</p>
+                                <p class="text-sm text-gray-500">Potential interaction detected - Reviewed by pharmacist</p>
+                                <p class="text-xs text-gray-400 mt-1">18 minutes ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Quick Actions</h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3">
+                        <button class="w-full bg-blue-600 text-white rounded-lg px-4 py-3 text-sm font-medium hover:bg-blue-700 transition">
+                            Register New Patient
+                        </button>
+                        <button class="w-full bg-white border border-gray-300 text-gray-700 rounded-lg px-4 py-3 text-sm font-medium hover:bg-gray-50 transition">
+                            View Queue
+                        </button>
+                        <button class="w-full bg-white border border-gray-300 text-gray-700 rounded-lg px-4 py-3 text-sm font-medium hover:bg-gray-50 transition">
+                            AI Insights
+                        </button>
+                        <button class="w-full bg-white border border-gray-300 text-gray-700 rounded-lg px-4 py-3 text-sm font-medium hover:bg-gray-50 transition">
+                            Reports
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Agents Status -->
+        <div class="mt-8 bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">AI Agents Status</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-900">Triage Agent</span>
+                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        </div>
+                        <p class="text-xs text-gray-500">Active - Processing 3 patients</p>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-900">CDSS Agent</span>
+                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        </div>
+                        <p class="text-xs text-gray-500">Active - 12 recommendations today</p>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-900">Scribe Agent</span>
+                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        </div>
+                        <p class="text-xs text-gray-500">Active - 2 sessions in progress</p>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-900">Vision Agent</span>
+                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        </div>
+                        <p class="text-xs text-gray-500">Active - 5 scans analyzed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center">
+                <p class="text-sm text-gray-500">© 2024 MedhaOS Healthcare Platform. All rights reserved.</p>
+                <div class="flex space-x-4">
+                    <span class="text-xs text-gray-400">Version 1.0.0</span>
+                    <span class="text-xs text-gray-400">•</span>
+                    <span class="text-xs text-green-600">● All Systems Operational</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

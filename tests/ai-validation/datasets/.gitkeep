@@ -1,0 +1,23 @@
+# AI Model Test Datasets
+
+This directory contains test datasets for AI model validation.
+
+## Dataset Files
+
+- `triage-test-dataset.json` - 10,000 labeled triage cases
+- `vision-test-dataset.json` - 5,000 medical images with annotations
+- `disease-prediction-dataset.json` - Historical outbreak data
+- `cdss-test-dataset.json` - 8,000 clinical cases with expert recommendations
+
+## Dataset Format
+
+Each dataset includes:
+- Input features
+- Ground truth labels
+- Demographic information
+- Metadata (source, date, expert annotations)
+
+## Data Privacy
+
+All datasets are anonymized and comply with HIPAA and DISHA Act requirements.
+No real patient data is used in testing.

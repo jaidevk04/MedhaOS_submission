@@ -1,0 +1,387 @@
+# Default values for MedhaOS Helm Chart
+
+# Global configuration
+global:
+  environment: production
+  region: ap-south-1
+  domain: medhaos.health
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# API Gateway Service
+apiGateway:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: medhaos/api-gateway
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  env:
+    - name: NODE_ENV
+      value: "production"
+    - name: PORT
+      value: "3000"
+    - name: LOG_LEVEL
+      value: "info"
+  envFrom:
+    - secretRef:
+        name: medhaos-secrets
+    - configMapRef:
+        name: medhaos-config
+
+# Supervisor Agent Service
+supervisorAgent:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: medhaos/supervisor-agent
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3001
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+# Triage Agent Service
+triageAgent:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: medhaos/triage-agent
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3002
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 15
+    targetCPUUtilizationPercentage: 70
+
+# Ambient Scribe Agent Service
+ambientScribeAgent:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: medhaos/ambient-scribe-agent
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3003
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 3000m
+      memory: 6Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+# Drug Safety Agent Service
+drugSafetyAgent:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: medhaos/drug-safety-agent
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3004
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+
+# CDSS Agent Service
+cdssAgent:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: medhaos/cdss-agent
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3005
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+# Diagnostic Vision Agent Service
+diagnosticVisionAgent:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: medhaos/diagnostic-vision-agent
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3006
+  resources:
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+      nvidia.com/gpu: 1
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+      nvidia.com/gpu: 1
+  nodeSelector:
+    node.kubernetes.io/instance-type: "g4dn.xlarge"
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+
+# Queue Optimization Agent Service
+queueOptimizationAgent:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: medhaos/queue-optimization-agent
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3007
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+
+# Nurse Task Coordination Service
+nurseTaskCoordination:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: medhaos/nurse-task-coordination
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3008
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+
+# Integration Service
+integrationService:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: medhaos/integration-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3009
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: ""  # Set via values override
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
+  hosts:
+    - host: api.medhaos.health
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: api-gateway
+              port:
+                number: 3000
+    - host: admin.medhaos.health
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: api-gateway
+              port:
+                number: 3000
+    - host: clinician.medhaos.health
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: api-gateway
+              port:
+                number: 3000
+
+# PostgreSQL Configuration (External RDS)
+postgresql:
+  enabled: false  # Using external RDS
+  external:
+    enabled: true
+    host: ""  # Set via values override
+    port: 5432
+    database: medhaos
+    username: medhaos_admin
+    existingSecret: medhaos-rds-secret
+    existingSecretPasswordKey: password
+
+# Redis Configuration (External ElastiCache)
+redis:
+  enabled: false  # Using external ElastiCache
+  external:
+    enabled: true
+    host: ""  # Set via values override
+    port: 6379
+    existingSecret: medhaos-redis-secret
+    existingSecretPasswordKey: auth-token
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: ""  # Set via values override
+  name: medhaos-sa
+
+# Pod Security Policy
+podSecurityPolicy:
+  enabled: true
+
+# Network Policy
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+  prometheusRule:
+    enabled: true
+
+# Logging
+logging:
+  enabled: true
+  fluentbit:
+    enabled: true
+    image:
+      repository: fluent/fluent-bit
+      tag: "2.1.0"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+# ConfigMap data
+config:
+  AWS_REGION: ap-south-1
+  AWS_S3_BUCKET: medhaos-production-medical-images-primary
+  DYNAMODB_AGENT_TASKS_TABLE: medhaos-production-agent-tasks
+  DYNAMODB_SESSION_DATA_TABLE: medhaos-production-session-data
+  DYNAMODB_QUEUE_MANAGEMENT_TABLE: medhaos-production-queue-management
+  CORS_ORIGIN: "https://medhaos.health,https://admin.medhaos.health,https://clinician.medhaos.health"
+  RATE_LIMIT_MAX: "1000"
+  RATE_LIMIT_WINDOW_MS: "60000"
+  JWT_EXPIRY: "15m"
+  REFRESH_TOKEN_EXPIRY: "7d"
+
+# Secrets (should be provided via external secret management)
+secrets: {}
+  # DATABASE_URL: ""
+  # REDIS_URL: ""
+  # JWT_SECRET: ""
+  # AWS_ACCESS_KEY_ID: ""
+  # AWS_SECRET_ACCESS_KEY: ""

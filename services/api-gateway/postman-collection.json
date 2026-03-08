@@ -1,0 +1,446 @@
+{
+  "info": {
+    "name": "MedhaOS Healthcare API",
+    "description": "Complete API collection for MedhaOS Healthcare Intelligence Ecosystem",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "API Version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/version",
+              "host": ["{{base_url}}"],
+              "path": ["version"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ramesh Kumar\",\n  \"age\": 58,\n  \"gender\": \"male\",\n  \"abhaId\": \"1234-5678-9012\",\n  \"languagePreference\": \"hindi\",\n  \"contact\": {\n    \"phone\": \"+91-9876543210\",\n    \"email\": \"ramesh.kumar@example.com\"\n  },\n  \"address\": {\n    \"district\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pincode\": \"400001\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/patients",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patients"]
+            }
+          }
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/patients/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patients", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/patients?search=&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patients"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ramesh Kumar\",\n  \"age\": 59\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/patients/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patients", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Patient Medical History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/patients/:id/medical-history",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "patients", ":id", "medical-history"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Encounters",
+      "item": [
+        {
+          "name": "Create Encounter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"\",\n  \"facilityId\": \"\",\n  \"clinicianId\": \"\",\n  \"encounterType\": \"OPD\",\n  \"chiefComplaint\": \"Chest pain\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounters",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounters"]
+            }
+          }
+        },
+        {
+          "name": "Get Encounter by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounters/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounters", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Triage Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symptoms\": [\"chest pain\", \"shortness of breath\"],\n  \"vitals\": {\n    \"temperature\": 98.6,\n    \"bloodPressure\": \"145/92\",\n    \"heartRate\": 98,\n    \"respiratoryRate\": 18,\n    \"spo2\": 96\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounters/:id/triage",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounters", ":id", "triage"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Clinical Notes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subjective\": \"Patient reports chest pain for 2 hours\",\n  \"objective\": \"BP 145/92, HR 98, diaphoretic\",\n  \"assessment\": \"R/O STEMI, ACS\",\n  \"plan\": \"Troponin, ECG, Aspirin 300mg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/encounters/:id/clinical-notes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "encounters", ":id", "clinical-notes"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Diagnostics",
+      "item": [
+        {
+          "name": "Create Diagnostic Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"encounterId\": \"\",\n  \"patientId\": \"\",\n  \"reportType\": \"radiology\",\n  \"modality\": \"X-ray\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/diagnostics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "diagnostics"]
+            }
+          }
+        },
+        {
+          "name": "Get Diagnostic Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/diagnostics/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "diagnostics", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Analyze Diagnostic Image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/diagnostics/:id/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "diagnostics", ":id", "analyze"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"\",\n  \"facilityId\": \"\",\n  \"clinicianId\": \"\",\n  \"appointmentDate\": \"2026-03-10\",\n  \"appointmentTime\": \"10:00\",\n  \"specialty\": \"Cardiology\",\n  \"urgencyScore\": 78\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments"]
+            }
+          }
+        },
+        {
+          "name": "Get Appointment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointments/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointments/availability?facilityId=&date=2026-03-10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", "availability"],
+              "query": [
+                {
+                  "key": "facilityId",
+                  "value": ""
+                },
+                {
+                  "key": "date",
+                  "value": "2026-03-10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirm Appointment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointments/:id/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ":id", "confirm"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Patient unavailable\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/appointments/:id/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ":id", "cancel"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

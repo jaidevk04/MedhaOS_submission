@@ -1,0 +1,28 @@
+{
+  "name": "@medhaos/ai-validation",
+  "version": "1.0.0",
+  "description": "AI model validation tests for MedhaOS Healthcare Intelligence Ecosystem",
+  "private": true,
+  "scripts": {
+    "validate:all": "jest --config jest.config.js",
+    "validate:triage": "jest --config jest.config.js accuracy/triage-validation",
+    "validate:vision": "jest --config jest.config.js accuracy/vision-validation",
+    "validate:disease-prediction": "jest --config jest.config.js accuracy/disease-prediction-validation",
+    "validate:cdss": "jest --config jest.config.js accuracy/cdss-validation",
+    "validate:bias": "jest --config jest.config.js bias/",
+    "validate:explainability": "jest --config jest.config.js explainability/",
+    "generate:report": "node scripts/generate-validation-report.js",
+    "prepare:datasets": "node scripts/prepare-test-datasets.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
