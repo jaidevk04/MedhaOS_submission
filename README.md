@@ -9,24 +9,36 @@ A comprehensive healthcare platform with AI-powered clinical assistance, featuri
 ### Prerequisites
 - Node.js 18+ and npm
 - Git
+- Docker & Docker Compose (for PostgreSQL and other services)
+- Gemini API Key (get from https://aistudio.google.com/app/apikey)
 
 ### Installation & Setup
 
 ```bash
 # 1. Clone the repository
-git clone <repository-url>
-cd MedhaOS_1
+git clone https://github.com/jaidevk04/MedhaOS_submission.git
+cd MedhaOS_submission
 
-# 2. Install dependencies
+# 2. Set up environment variables
+cd backend
+cp .env.example .env
+# Edit .env and add your GEMINI_API_KEY
+nano .env  # or use your preferred editor
+
+# 3. Start Docker services (PostgreSQL, Redis, etc.)
+cd ..
+docker-compose up -d
+
+# 4. Install dependencies
 npm install
 
-# 3. Initialize the database
+# 5. Initialize the database
 cd backend
-node scripts/migrate-safe.js
+npm run migrate
 cd ..
 
-# 4. Start all applications
-npm run dev
+# 6. Start all applications
+./START_ALL.sh
 ```
 
 **That's it!** All applications will start automatically.
@@ -39,12 +51,29 @@ Once started, access the applications at:
 
 | Application | URL | Purpose |
 |------------|-----|---------|
-| **Patient Portal** | http://localhost:3000 | Patient interface for consultations |
-| **Clinician Terminal** | http://localhost:3002 | Doctor's clinical workspace |
-| **Nurse Tablet** | http://localhost:3003 | Nurse station interface |
-| **Admin Dashboard** | http://localhost:3004 | System administration |
-| **Public Health Dashboard** | http://localhost:3005 | Public health analytics |
-| **Backend API** | http://localhost:5000 | REST API server |
+| **Patient Portal** | http://localhost:3000 | Patient interface for voice triage and consultations |
+| **Clinician Terminal** | http://localhost:3002 | Doctor's clinical workspace with AI assistance |
+| **Nurse Tablet** | http://localhost:3003 | Nurse station interface for task management |
+| **Admin Dashboard** | http://localhost:3004 | System administration and analytics |
+| **Public Health Dashboard** | http://localhost:3005 | Public health surveillance and analytics |
+| **Backend API** | http://localhost:4000 | REST API and WebSocket server |
+
+---
+
+## 🔑 Important Setup Notes
+
+### Gemini API Key
+This application requires a Gemini API key for AI-powered features:
+1. Get your free API key from: https://aistudio.google.com/app/apikey
+2. Copy `backend/.env.example` to `backend/.env`
+3. Add your API key: `GEMINI_API_KEY=your_key_here`
+4. Never commit the `.env` file to git (it's already in .gitignore)
+
+### Database Setup
+The application uses PostgreSQL running in Docker:
+- Database is automatically created on first run
+- Sample data is seeded for testing
+- Connection details are in `backend/.env`
 
 ---
 
@@ -208,6 +237,43 @@ Once started, access the applications at:
 ---
 
 ## 🏗️ Architecture
+
+### Three-Layer AI Intelligence System
+
+MedhaOS operates on a sophisticated three-layer AI architecture:
+
+#### 1. Reflexive Layer (Instant Response)
+- **Purpose**: Immediate, real-time processing
+- **Functions**: 
+  - Audio transcription and language detection
+  - Emotion recognition from voice
+  - Vital signs monitoring
+  - Instant alerts and notifications
+- **Response Time**: < 1 second
+- **Technology**: Gemini 2.5 Flash, WebSocket streaming
+
+#### 2. Perceptual Layer (Context Understanding)
+- **Purpose**: Pattern recognition and context analysis
+- **Functions**:
+  - Symptom identification and categorization
+  - Medical history correlation
+  - Drug interaction detection
+  - Conversation flow management
+- **Response Time**: 1-3 seconds
+- **Technology**: Gemini 2.5 Flash with structured outputs
+
+#### 3. Cognitive Layer (Complex Reasoning)
+- **Purpose**: Deep analysis and decision support
+- **Functions**:
+  - Differential diagnosis generation
+  - Treatment plan recommendations
+  - Predictive analytics for bed occupancy
+  - Clinical trial matching
+  - Operational optimization
+- **Response Time**: 3-10 seconds
+- **Technology**: Gemini 2.5 Flash with RAG, function calling
+
+### Application Structure
 
 ### Frontend Applications
 ```
